@@ -19,6 +19,9 @@ public class PlayerCondition : MonoBehaviour, IDamagable
     public float noHungerHealthDecay;
     public event Action onTakeDamage;
 
+
+    private Coroutine speedBoostCoroutine;
+
     private void Update()
     {
         hunger.Subtract(hunger.passiveValue * Time.deltaTime);
@@ -45,6 +48,29 @@ public class PlayerCondition : MonoBehaviour, IDamagable
     public void Eat(float amount)
     {
         hunger.Add(amount);
+    }
+
+    public IEnumerator SpeedBoost(float speedMultiplier, float duration)
+    {
+        PlayerController playerController = GetComponent<PlayerController>();
+        if (playerController == null) yield break;
+
+        // 기존 Coroutine이 실행 중이면 중지
+        if (speedBoostCoroutine != null)
+        {
+            StopCoroutine(speedBoostCoroutine);
+        }
+
+        speedBoostCoroutine = StartCoroutine(ApplySpeedBoost(playerController, speedMultiplier, duration));
+    }
+
+    private IEnumerator ApplySpeedBoost(PlayerController playerController, float speedMultiplier, float duration)
+    {
+        float originalSpeed = playerController.moveSpeed;
+        playerController.moveSpeed += speedMultiplier;
+        yield return new WaitForSeconds(duration);    
+        playerController.moveSpeed = originalSpeed;   
+        speedBoostCoroutine = null;                   
     }
 
     public void Die()
